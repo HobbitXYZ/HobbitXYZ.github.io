@@ -7,641 +7,296 @@
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Geologica:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg:       #0d0f14;
-    --bg2:      #13161f;
-    --bg3:      #1a1e2a;
-    --border:   rgba(255,255,255,0.08);
-    --accent:   #c8f247;
-    --accent2:  #5b8cff;
-    --text:     #f0f2f8;
-    --muted:    #8890a8;
-    --green:    #3de88a;
-    --red:      #ff5757;
-    --radius:   16px;
-  }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Geologica', sans-serif;
-    font-weight: 300;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Фоновая сетка */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 48px 48px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .wrapper {
-    position: relative;
-    z-index: 1;
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 60px 24px 80px;
-  }
-
-  /* Header */
-  header {
-    margin-bottom: 56px;
-  }
-
-  .tag {
-    display: inline-block;
-    font-family: 'Unbounded', sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 5px 12px;
-    border-radius: 100px;
-    margin-bottom: 20px;
-  }
-
-  h1 {
-    font-family: 'Unbounded', sans-serif;
-    font-size: clamp(28px, 5vw, 48px);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-  }
-
-  h1 span { color: var(--accent); }
-
-  .subtitle {
-    color: var(--muted);
-    font-size: 15px;
-    line-height: 1.6;
-    max-width: 540px;
-  }
-
-  /* Inputs */
-  .inputs-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  @media (max-width: 640px) {
-    .inputs-grid { grid-template-columns: 1fr; }
-  }
-
-  .input-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    transition: border-color 0.2s;
-  }
-
-  .input-card:focus-within {
-    border-color: rgba(200,242,71,0.4);
-  }
-
-  .input-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-
-  .input-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .input-unit {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 13px;
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-
-  input[type="number"] {
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: 'Unbounded', sans-serif;
-    font-size: 26px;
-    font-weight: 600;
-    width: 100%;
-    -moz-appearance: textfield;
-  }
-
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-  .input-hint {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 8px;
-    opacity: 0.7;
-  }
-
-  /* Summary cards */
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 40px;
-  }
-
-  @media (max-width: 640px) {
-    .summary { grid-template-columns: 1fr 1fr; }
-  }
-
-  .summary-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-  }
-
-  .summary-card.highlight {
-    background: var(--bg3);
-    border-color: rgba(200,242,71,0.25);
-  }
-
-  .summary-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .summary-value {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 22px;
-    font-weight: 600;
-    line-height: 1.2;
-  }
-
-  .summary-value.green { color: var(--green); }
-  .summary-value.accent { color: var(--accent); }
-
-  .summary-sub {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  /* Chart */
-  .chart-wrap {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-    margin-bottom: 32px;
-  }
-
-  .chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .chart-title {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .legend {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .legend-dot {
-    width: 8px; height: 8px;
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
-
-  .chart-canvas-wrap {
-    position: relative;
-    height: 300px;
-  }
-
-  /* Table */
-  .table-wrap {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .table-header-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1.5fr;
-    padding: 12px 20px;
-    background: var(--bg3);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .th {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .th:not(:first-child) { text-align: right; }
-
-  .table-body { max-height: 480px; overflow-y: auto; }
-
-  .table-body::-webkit-scrollbar { width: 4px; }
-  .table-body::-webkit-scrollbar-track { background: transparent; }
-  .table-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .table-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1.5fr;
-    padding: 13px 20px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-    animation: fadeIn 0.3s ease both;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .table-row:last-child { border-bottom: none; }
-  .table-row:hover { background: var(--bg3); }
-
-  .table-row.is-ok {
-    background: rgba(61,232,138,0.06);
-    border-bottom-color: rgba(61,232,138,0.1);
-  }
-
-  .table-row.is-current {
-    background: rgba(200,242,71,0.07);
-    border-left: 2px solid var(--accent);
-  }
-
-  .td { font-size: 13px; }
-  .td:not(:first-child) { text-align: right; }
-
-  .td-rate {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .td-needed {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-weight: 500;
-  }
-
-  .status-badge.ok {
-    background: rgba(61,232,138,0.15);
-    color: var(--green);
-  }
-
-  .status-badge.current {
-    background: rgba(200,242,71,0.15);
-    color: var(--accent);
-  }
-
-  .status-badge.need {
-    background: rgba(255,255,255,0.06);
-    color: var(--muted);
-  }
-
-  /* Footer */
-  footer {
-    margin-top: 48px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d0f14;--bg2:#13161f;--bg3:#1a1e2a;--border:rgba(255,255,255,0.08);--accent:#c8f247;--text:#f0f2f8;--muted:#8890a8;--green:#3de88a;--red:#ff5757;--radius:16px}
+body{background:var(--bg);color:var(--text);font-family:'Geologica',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:56px 24px 80px}
+header{margin-bottom:48px}
+.tag{display:inline-block;font-family:'Unbounded',sans-serif;font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:5px 12px;border-radius:100px;margin-bottom:20px}
+h1{font-family:'Unbounded',sans-serif;font-size:clamp(26px,4.5vw,44px);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:14px}
+h1 span{color:var(--accent)}
+.subtitle{color:var(--muted);font-size:14px;line-height:1.7;max-width:580px}
+.sec-label{font-family:'Unbounded',sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.igrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+@media(max-width:680px){.igrid{grid-template-columns:1fr 1fr}}
+@media(max-width:400px){.igrid{grid-template-columns:1fr}}
+.icard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 14px;transition:border-color .2s}
+.icard:focus-within{border-color:rgba(200,242,71,.35)}
+.ilabel{font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.irow{display:flex;align-items:baseline;gap:4px}
+.iunit{font-family:'Unbounded',sans-serif;font-size:12px;color:var(--muted);flex-shrink:0}
+input[type=number]{background:none;border:none;outline:none;color:var(--text);font-family:'Unbounded',sans-serif;font-size:24px;font-weight:600;width:100%;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+.ihint{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.4}
+.ihint b{color:rgba(200,242,71,.7);font-weight:500}
+.fpill{background:var(--bg2);border:1px solid rgba(200,242,71,.15);border-radius:12px;padding:14px 20px;margin-bottom:36px;font-size:12px;color:var(--muted);line-height:1.9}
+.fpill b{color:var(--accent);font-weight:500}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px}
+@media(max-width:680px){.sgrid{grid-template-columns:1fr 1fr}}
+.scard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.scard.hl{border-color:rgba(200,242,71,.2);background:var(--bg3)}
+.slabel{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+.sval{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:600;line-height:1.2}
+.sval.accent{color:var(--accent)}.sval.green{color:var(--green)}.sval.red{color:var(--red)}
+.ssub{font-size:10px;color:var(--muted);margin-top:5px}
+.cwrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:28px}
+.chdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.ctitle{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.ccwrap{position:relative;height:280px}
+.twrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.thead{display:grid;grid-template-columns:1.1fr 1.1fr 1fr 1fr 1.5fr;padding:11px 20px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.th{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.th:not(:first-child){text-align:right}
+.tbody{max-height:480px;overflow-y:auto}
+.tbody::-webkit-scrollbar{width:3px}
+.tbody::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.trow{display:grid;grid-template-columns:1.1fr 1.1fr 1fr 1fr 1.5fr;padding:12px 20px;border-bottom:1px solid var(--border);transition:background .12s;animation:fi .22s ease both}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.trow:last-child{border-bottom:none}
+.trow:hover{background:var(--bg3)}
+.trow.ok{background:rgba(61,232,138,.05)}
+.trow.cur{background:rgba(200,242,71,.06);border-left:2px solid var(--accent)}
+.trow.loss{background:rgba(255,87,87,.04)}
+.td{font-size:13px}
+.td:not(:first-child){text-align:right}
+.tdrate{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700}
+.tdn{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:100px;font-weight:500}
+.bok{background:rgba(61,232,138,.12);color:var(--green)}
+.bcur{background:rgba(200,242,71,.12);color:var(--accent)}
+.bneed{background:rgba(255,255,255,.05);color:var(--muted)}
+.bloss{background:rgba(255,87,87,.12);color:var(--red)}
+@media(max-width:640px){.thead,.trow{grid-template-columns:1fr 1fr 1fr}.thead .th:nth-child(n+4),.trow .td:nth-child(n+4){display:none}}
+footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
 </style>
 </head>
 <body>
-<div class="wrapper">
-
-  <header>
-    <div class="tag">Калькулятор прибыльности</div>
-    <h1>Ставка дня<br>и число <span>мероприятий</span></h1>
-    <p class="subtitle">Введите текущие показатели — калькулятор покажет, сколько мероприятий нужно при разных ставках дня для сохранения целевой прибыли.</p>
-  </header>
-
-  <!-- Inputs -->
-  <div class="inputs-grid">
-    <div class="input-card">
-      <div class="input-label">Мероприятий в году</div>
-      <div class="input-row">
-        <input type="number" id="nCurrent" value="7" min="1" max="200">
-        <span class="input-unit">шт.</span>
-      </div>
-      <div class="input-hint">Реальное число за прошлый период</div>
-    </div>
-
-    <div class="input-card">
-      <div class="input-label">Прибыль на 1 мероприятие</div>
-      <div class="input-row">
-        <input type="number" id="profitPer" value="426331" step="10000">
-        <span class="input-unit">₽</span>
-      </div>
-      <div class="input-hint">Средняя по периоду</div>
-    </div>
-
-    <div class="input-card">
-      <div class="input-label">Текущая ставка дня</div>
-      <div class="input-row">
-        <input type="number" id="maxRate" value="96000" step="2000">
-        <span class="input-unit">₽</span>
-      </div>
-      <div class="input-hint">Верхняя граница диапазона</div>
-    </div>
+<div class="wrap">
+<header>
+  <div class="tag">Калькулятор прибыльности</div>
+  <h1>Ставка дня<br>и число <span>мероприятий</span></h1>
+  <p class="subtitle">При какой ставке дня и каком числе мероприятий сохраняется текущая прибыль. Зональные надбавки не учитываются — они покрывают транспорт и формируют дополнительную маржу сверху.</p>
+</header>
+ 
+<div class="sec-label">Параметры</div>
+<div class="igrid">
+  <div class="icard">
+    <div class="ilabel">Мероприятий в году</div>
+    <div class="irow"><input type="number" id="nBase" value="12" min="1" max="200"><span class="iunit">шт.</span></div>
+    <div class="ihint">В среднем <b>12 в год</b> за прошедший период</div>
   </div>
-
-  <!-- Summary -->
-  <div class="summary">
-    <div class="summary-card highlight">
-      <div class="summary-label">Целевая прибыль за год</div>
-      <div class="summary-value accent" id="s-total">—</div>
-      <div class="summary-sub" id="s-total-sub"></div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">При текущей ставке нужно</div>
-      <div class="summary-value" id="s-current">—</div>
-      <div class="summary-sub" id="s-current-sub"></div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-label">Мин. ставка при вашем плане</div>
-      <div class="summary-value green" id="s-minrate">—</div>
-      <div class="summary-sub" id="s-minrate-sub"></div>
-    </div>
+  <div class="icard">
+    <div class="ilabel">Длина мероприятия</div>
+    <div class="irow"><input type="number" id="dpe" value="6" min="1" max="30"><span class="iunit">дней</span></div>
+    <div class="ihint">С монтажным днём. <b>Среднее: 6 дней</b></div>
   </div>
-
-  <!-- Chart -->
-  <div class="chart-wrap">
-    <div class="chart-header">
-      <div class="chart-title">Зависимость: ставка дня → число мероприятий</div>
-      <div class="legend">
-        <div class="legend-item">
-          <div class="legend-dot" style="background:rgba(91,140,255,0.5)"></div>
-          <span>Ниже цели</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#3de88a"></div>
-          <span>Цель достигнута</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-dot" style="background:#c8f247"></div>
-          <span>Текущая ставка</span>
-        </div>
-      </div>
-    </div>
-    <div class="chart-canvas-wrap">
-      <canvas id="chart"></canvas>
-    </div>
+  <div class="icard">
+    <div class="ilabel">Расходы ЗП в день</div>
+    <div class="irow"><input type="number" id="cpd" value="27347" step="500"><span class="iunit">₽</span></div>
+    <div class="ihint">ЗП / дни. <b>Факт: 27 347 ₽/день</b></div>
   </div>
-
-  <!-- Table -->
-  <div class="table-wrap">
-    <div class="table-header-row">
-      <div class="th">Ставка дня, ₽</div>
-      <div class="th">Прибыль / меропр., ₽</div>
-      <div class="th">Нужно мероприятий</div>
-      <div class="th">Статус</div>
-    </div>
-    <div class="table-body" id="tbody"></div>
+  <div class="icard">
+    <div class="ilabel">Текущая ставка дня</div>
+    <div class="irow"><input type="number" id="maxRate" value="96000" step="2000"><span class="iunit">₽</span></div>
+    <div class="ihint">Верхняя граница. <b>Сейчас: 96 000 ₽</b></div>
   </div>
-
-  <footer>
-    <span>Спорт вокруг ИТ · Калькулятор прибыльности мероприятий</span>
-    <span>Шаг ставки: 2 000 ₽ · Минимум: 50 000 ₽</span>
-  </footer>
-
 </div>
-
+ 
+<div class="fpill" id="fpill"></div>
+ 
+<div class="sgrid">
+  <div class="scard hl"><div class="slabel">Прибыль за год (база)</div><div class="sval accent" id="s1">—</div><div class="ssub" id="s1s"></div></div>
+  <div class="scard"><div class="slabel">Прибыль в день (база)</div><div class="sval" id="s2">—</div><div class="ssub" id="s2s"></div></div>
+  <div class="scard"><div class="slabel">При текущей ставке нужно</div><div class="sval" id="s3">—</div><div class="ssub" id="s3s"></div></div>
+  <div class="scard"><div class="slabel">Мин. ставка при вашем плане</div><div class="sval green" id="s4">—</div><div class="ssub" id="s4s"></div></div>
+</div>
+ 
+<div class="cwrap">
+  <div class="chdr">
+    <div class="ctitle">Ставка дня → число мероприятий для сохранения прибыли</div>
+    <div class="legend">
+      <div class="li"><div class="ld" style="background:rgba(255,87,87,.7)"></div><span>Убыток</span></div>
+      <div class="li"><div class="ld" style="background:rgba(91,140,255,.4)"></div><span>Нужно больше</span></div>
+      <div class="li"><div class="ld" style="background:#3de88a"></div><span>Цель достигнута</span></div>
+      <div class="li"><div class="ld" style="background:#c8f247"></div><span>Текущая ставка</span></div>
+    </div>
+  </div>
+  <div class="ccwrap"><canvas id="chart"></canvas></div>
+</div>
+ 
+<div class="twrap">
+  <div class="thead">
+    <div class="th">Ставка дня, ₽</div>
+    <div class="th">Прибыль дня, ₽</div>
+    <div class="th">Нужно дней</div>
+    <div class="th">Нужно меропр.</div>
+    <div class="th">Статус</div>
+  </div>
+  <div class="tbody" id="tbody"></div>
+</div>
+ 
+<footer>
+  <span>Спорт вокруг ИТ · Калькулятор прибыльности мероприятий</span>
+  <span>Шаг ставки 2 000 ₽ · Минимум 50 000 ₽ · Зоны не включены</span>
+</footer>
+</div>
+ 
 <script>
-const fmt  = v => Math.round(v).toLocaleString('ru-RU');
-const fmtK = v => (v/1000).toFixed(0)+'к';
-
-// Средние параметры из 7 мероприятий выборки
-const AVG_SOREV = (4+4+4+4+8+7+4)/7;
-const AVG_ZONE  = (4*30000+4*70000+4*30000+4*30000+8*50000+7*30000+4*30000)/7;
-const AVG_EXP   = (290614+281700+274280+229986+512176+389882+310048)/7;
-
-function profitAtRate(rate) {
-  return rate * (0.8 + AVG_SOREV) + AVG_ZONE - AVG_EXP;
+const fmt = v => Math.round(v).toLocaleString('ru-RU');
+const fmtK = v => { const k=v/1000; return (k%1===0?k.toFixed(0):k.toFixed(1))+'к'; };
+const MIN=50000, STEP=2000;
+ 
+function buildRates(max) {
+  const r=[];
+  for(let x=MIN;x<=max;x+=STEP) r.push(x);
+  if(r[r.length-1]!==max) r.push(max);
+  return r;
 }
-
-function buildRates(maxRate) {
-  const MIN = 50000, STEP = 2000;
-  const rates = [];
-  for (let r = MIN; r <= maxRate; r += STEP) rates.push(r);
-  if (rates[rates.length-1] !== maxRate) rates.push(maxRate);
-  return rates;
-}
-
-let chartInstance = null;
-
-function render() {
-  const nCurrent  = Math.max(1, parseInt(document.getElementById('nCurrent').value)   || 7);
-  const profitPer = Math.max(1, parseFloat(document.getElementById('profitPer').value) || 426331);
-  const maxRate   = Math.max(52000, parseFloat(document.getElementById('maxRate').value) || 96000);
-  const totalTarget = nCurrent * profitPer;
-
-  const rates   = buildRates(maxRate);
-  const results = rates.map(rate => {
-    const profit = profitAtRate(rate);
-    const needed = profit > 0 ? totalTarget / profit : 99999;
-    return {rate, profit, needed};
+ 
+let chart=null;
+ 
+function render(){
+  const nBase = Math.max(1,parseInt(document.getElementById('nBase').value)||12);
+  const dpe   = Math.max(1,parseInt(document.getElementById('dpe').value)||6);
+  const cpd   = Math.max(0,parseFloat(document.getElementById('cpd').value)||27347);
+  const maxR  = Math.max(MIN+STEP,parseFloat(document.getElementById('maxRate').value)||96000);
+ 
+  const totalDays  = nBase * dpe;
+  const pdBase     = maxR - cpd;
+  const pyBase     = pdBase * totalDays;
+ 
+  document.getElementById('fpill').innerHTML =
+    '<b>Целевая прибыль года</b> = ('+fmt(maxR)+' − '+fmt(cpd)+') × '+totalDays+' дн. = <b>'+fmt(pyBase)+' ₽</b>' +
+    ' &nbsp;·&nbsp; <b>Нужно дней</b> = '+fmt(pyBase)+' / (ставка − '+fmt(cpd)+')' +
+    ' &nbsp;·&nbsp; <b>Нужно меропр.</b> = дней / '+dpe;
+ 
+  document.getElementById('s1').textContent = fmt(pyBase)+' ₽';
+  document.getElementById('s1s').textContent = nBase+' меропр. × '+dpe+' дн. × '+fmt(pdBase)+' ₽/день';
+  document.getElementById('s2').textContent = fmt(pdBase)+' ₽';
+  document.getElementById('s2s').textContent = fmt(maxR)+' − '+fmt(cpd)+' ₽ ЗП';
+ 
+  const rates = buildRates(maxR);
+  const res = rates.map(rate=>{
+    const pd = rate - cpd;
+    const dn = pd>0 ? pyBase/pd : null;
+    const en = dn!==null ? dn/dpe : null;
+    return {rate,pd,dn,en};
   });
-
-  const atMax  = results.find(r => r.rate === maxRate);
-  const minOk  = [...results].reverse().find(r => Math.ceil(r.needed) <= nCurrent);
-
-  // Summary
-  document.getElementById('s-total').textContent     = fmt(totalTarget) + ' ₽';
-  document.getElementById('s-total-sub').textContent = `${nCurrent} × ${fmt(profitPer)} ₽`;
-
-  if (atMax) {
-    document.getElementById('s-current').textContent     = Math.ceil(atMax.needed) + ' мероприятий';
-    document.getElementById('s-current-sub').textContent = `прибыль/меропр.: ${fmt(atMax.profit)} ₽`;
-  }
-
-  if (minOk) {
-    document.getElementById('s-minrate').textContent     = fmt(minOk.rate) + ' ₽';
-    document.getElementById('s-minrate-sub').textContent = `нужно ${Math.ceil(minOk.needed)} меропр.`;
+ 
+  const atMax = res.find(r=>r.rate===maxR);
+  const minOk = [...res].reverse().find(r=>r.en!==null&&Math.ceil(r.en)<=nBase);
+ 
+  if(atMax&&atMax.en!==null){
+    document.getElementById('s3').textContent = Math.ceil(atMax.en)+' мероприятий';
+    document.getElementById('s3s').textContent = '= '+Math.ceil(atMax.dn)+' дней';
   } else {
-    document.getElementById('s-minrate').textContent     = 'выше ' + fmt(maxRate) + ' ₽';
-    document.getElementById('s-minrate-sub').textContent = 'снизьте план или поднимите ставку';
+    document.getElementById('s3').textContent = 'убыток';
+    document.getElementById('s3s').textContent = 'ставка ниже ЗП';
   }
-
-  // Chart
-  const maxY = Math.min(
-    Math.max(...results.map(r => Math.min(r.needed, 9999)), nCurrent) * 1.3,
-    nCurrent * 6
-  );
-
-  if (chartInstance) chartInstance.destroy();
-
-  Chart.defaults.color = '#8890a8';
-  Chart.defaults.font.family = "'Geologica', sans-serif";
-
-  chartInstance = new Chart(document.getElementById('chart'), {
-    type: 'bar',
-    data: {
-      labels: results.map(r => fmtK(r.rate)),
-      datasets: [{
-        data: results.map(r => +Math.min(r.needed, maxY).toFixed(1)),
-        backgroundColor: results.map(r =>
-          r.rate === maxRate              ? '#c8f247' :
-          Math.ceil(r.needed) <= nCurrent ? '#3de88a' :
-          'rgba(91,140,255,0.35)'
+ 
+  if(minOk){
+    document.getElementById('s4').textContent = fmt(minOk.rate)+' ₽';
+    document.getElementById('s4s').textContent = 'нужно '+Math.ceil(minOk.en)+' меропр.';
+  } else {
+    document.getElementById('s4').textContent = '> '+fmt(maxR)+' ₽';
+    document.getElementById('s4s').textContent = 'снизьте план или поднимите ставку';
+  }
+ 
+  if(chart) chart.destroy();
+  const pos = res.filter(r=>r.en!==null);
+  const maxY = pos.length ? Math.min(Math.max(...pos.map(r=>r.en),nBase)*1.35,nBase*6) : nBase*3;
+ 
+  Chart.defaults.color='#8890a8';
+  Chart.defaults.font.family="'Geologica',sans-serif";
+ 
+  chart = new Chart(document.getElementById('chart'),{
+    type:'bar',
+    data:{
+      labels:res.map(r=>fmtK(r.rate)),
+      datasets:[{
+        data:res.map(r=>r.en===null?0:+Math.min(r.en,maxY).toFixed(1)),
+        backgroundColor:res.map(r=>
+          r.en===null?'rgba(255,87,87,.55)':
+          r.rate===maxR?'#c8f247':
+          Math.ceil(r.en)<=nBase?'#3de88a':'rgba(91,140,255,.35)'
         ),
-        borderRadius: 6,
-        borderSkipped: false,
+        borderRadius:5,borderSkipped:false
       }]
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: {display: false},
-        tooltip: {
-          backgroundColor: '#1a1e2a',
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
-          padding: 12,
-          titleFont: {family: "'Unbounded', sans-serif", size: 11},
-          bodyFont:  {family: "'Geologica', sans-serif", size: 12},
-          callbacks: {
-            title: ctx => fmt(results[ctx[0].dataIndex].rate) + ' ₽',
-            label: ctx => {
-              const r = results[ctx.dataIndex];
-              return [
-                `Нужно мероприятий: ${r.needed.toFixed(1)} → ${Math.ceil(r.needed)}`,
-                `Прибыль/меропр.: ${fmt(r.profit)} ₽`
-              ];
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1a1e2a',borderColor:'rgba(255,255,255,.08)',borderWidth:1,padding:12,
+          titleFont:{family:"'Unbounded',sans-serif",size:11},
+          bodyFont:{family:"'Geologica',sans-serif",size:12},
+          callbacks:{
+            title:ctx=>fmt(res[ctx[0].dataIndex].rate)+' ₽/день',
+            label:ctx=>{
+              const r=res[ctx.dataIndex];
+              if(r.en===null) return['Убыток: ставка ниже расходов ЗП'];
+              return['Нужно мероприятий: '+r.en.toFixed(1)+' → '+Math.ceil(r.en),'Нужно дней: '+r.dn.toFixed(1)+' → '+Math.ceil(r.dn),'Прибыль дня: '+fmt(r.pd)+' ₽'];
             }
           }
         }
       },
-      scales: {
-        x: {
-          grid: {color: 'rgba(255,255,255,0.04)'},
-          ticks: {font: {size: 10}, maxRotation: 45, autoSkip: true, maxTicksLimit: 18}
-        },
-        y: {
-          min: 0, max: maxY,
-          grid: {color: 'rgba(255,255,255,0.04)'},
-          ticks: {callback: v => v + ' меропр.', font: {size: 10}}
-        }
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.03)'},ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:22}},
+        y:{min:0,max:maxY,grid:{color:'rgba(255,255,255,.03)'},ticks:{callback:v=>v+' меропр.',font:{size:10}}}
       }
     },
-    plugins: [{
-      id: 'plan_line',
-      afterDraw(chart) {
-        const {ctx, scales: {y, x}} = chart;
-        const yPos = y.getPixelForValue(nCurrent);
-        if (yPos < chart.chartArea.top || yPos > chart.chartArea.bottom) return;
+    plugins:[{
+      id:'pl',
+      afterDraw(c){
+        const {ctx,scales:{y,x}}=c;
+        const yp=y.getPixelForValue(nBase);
+        if(yp<c.chartArea.top||yp>c.chartArea.bottom) return;
         ctx.save();
-        ctx.strokeStyle = '#ff5757';
-        ctx.lineWidth   = 1.5;
-        ctx.setLineDash([5, 4]);
-        ctx.beginPath();
-        ctx.moveTo(x.left, yPos);
-        ctx.lineTo(x.right, yPos);
-        ctx.stroke();
-        ctx.fillStyle = '#ff5757';
-        ctx.font = 'bold 11px Geologica, sans-serif';
-        ctx.fillText('Ваш план: ' + nCurrent + ' меропр.', x.left + 8, yPos - 6);
+        ctx.strokeStyle='#ff5757';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+        ctx.beginPath();ctx.moveTo(x.left,yp);ctx.lineTo(x.right,yp);ctx.stroke();
+        ctx.fillStyle='#ff5757';ctx.font='bold 11px Geologica,sans-serif';
+        ctx.fillText('Текущий план: '+nBase+' меропр.',x.left+8,yp-6);
         ctx.restore();
       }
     }]
   });
-
-  // Table
-  const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '';
-
-  [...results].reverse().forEach((r, i) => {
-    const isOk      = Math.ceil(r.needed) <= nCurrent;
-    const isCurrent = r.rate === maxRate;
-    const diff      = Math.ceil(r.needed) - nCurrent;
-
-    const row = document.createElement('div');
-    row.className = 'table-row' + (isCurrent ? ' is-current' : isOk ? ' is-ok' : '');
-    row.style.animationDelay = (i * 12) + 'ms';
-
-    const badgeClass = isCurrent ? 'current' : isOk ? 'ok' : 'need';
-    const badgeText  = isCurrent
-      ? '← текущая ставка'
-      : isOk
-        ? `✓ хватает ${Math.ceil(r.needed)} меропр.`
-        : `нужно ещё +${diff} меропр.`;
-
-    row.innerHTML = `
-      <div class="td td-rate" style="color:${isCurrent ? 'var(--accent)' : isOk ? 'var(--green)' : 'var(--text)'}">${fmt(r.rate)} ₽</div>
-      <div class="td" style="color:var(--muted)">${fmt(r.profit)} ₽</div>
-      <div class="td td-needed" style="color:${isOk ? 'var(--green)' : 'var(--text)'}">${r.needed.toFixed(1)} → ${Math.ceil(r.needed)}</div>
-      <div class="td"><span class="status-badge ${badgeClass}">${badgeText}</span></div>
-    `;
+ 
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML='';
+  [...res].reverse().forEach((r,i)=>{
+    const isL=r.en===null;
+    const isOk=!isL&&Math.ceil(r.en)<=nBase;
+    const isCur=r.rate===maxR;
+    const diff=!isL?Math.ceil(r.en)-nBase:null;
+    const rc=isL?'loss':isCur?'cur':isOk?'ok':'';
+    const rclr=isCur?'var(--accent)':isL?'var(--red)':isOk?'var(--green)':'var(--text)';
+    let bc,bt;
+    if(isL){bc='bloss';bt='✕ убыток при этой ставке';}
+    else if(isCur){bc='bcur';bt='← текущая ставка';}
+    else if(isOk){bc='bok';bt='✓ хватает '+Math.ceil(r.en)+' меропр.';}
+    else{bc='bneed';bt='нужно ещё +'+diff+' меропр.';}
+    const row=document.createElement('div');
+    row.className='trow '+rc;
+    row.style.animationDelay=(i*8)+'ms';
+    row.innerHTML=
+      '<div class="td tdrate" style="color:'+rclr+'">'+fmt(r.rate)+' ₽</div>'+
+      '<div class="td" style="color:'+(isL?'var(--red)':'var(--muted)')+'">'+
+        (isL?'−'+fmt(Math.abs(r.pd)):fmt(r.pd))+' ₽</div>'+
+      '<div class="td" style="color:var(--muted)">'+
+        (isL?'—':r.dn.toFixed(1)+' → '+Math.ceil(r.dn))+'</div>'+
+      '<div class="td tdn" style="color:'+(isOk?'var(--green)':isL?'var(--red)':'var(--text)')+'">'+
+        (isL?'—':r.en.toFixed(1)+' → '+Math.ceil(r.en))+'</div>'+
+      '<div class="td"><span class="badge '+bc+'">'+bt+'</span></div>';
     tbody.appendChild(row);
   });
 }
-
-['nCurrent', 'profitPer', 'maxRate'].forEach(id => {
-  document.getElementById(id).addEventListener('input', render);
-});
-
+ 
+['nBase','dpe','cpd','maxRate'].forEach(id=>document.getElementById(id).addEventListener('input',render));
 render();
 </script>
 </body>
