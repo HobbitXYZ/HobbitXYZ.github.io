@@ -81,7 +81,7 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-
   <h1>Ставка дня<br>и число <span>мероприятий</span></h1>
   <p class="subtitle">При какой ставке дня и каком числе мероприятий сохраняется текущая прибыль. Зональные надбавки не учитываются — они покрывают транспорт и формируют дополнительную маржу сверху.</p>
 </header>
- 
+
 <div class="sec-label">Параметры</div>
 <div class="igrid">
   <div class="icard">
@@ -105,16 +105,16 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-
     <div class="ihint">Верхняя граница. <b>Сейчас: 96 000 ₽</b></div>
   </div>
 </div>
- 
+
 <div class="fpill" id="fpill"></div>
- 
+
 <div class="sgrid">
   <div class="scard hl"><div class="slabel">Прибыль за год (база)</div><div class="sval accent" id="s1">—</div><div class="ssub" id="s1s"></div></div>
   <div class="scard"><div class="slabel">Прибыль в день (база)</div><div class="sval" id="s2">—</div><div class="ssub" id="s2s"></div></div>
   <div class="scard"><div class="slabel">При текущей ставке нужно</div><div class="sval" id="s3">—</div><div class="ssub" id="s3s"></div></div>
   <div class="scard"><div class="slabel">Мин. ставка при вашем плане</div><div class="sval green" id="s4">—</div><div class="ssub" id="s4s"></div></div>
 </div>
- 
+
 <div class="cwrap">
   <div class="chdr">
     <div class="ctitle">Ставка дня → число мероприятий для сохранения прибыли</div>
@@ -127,7 +127,7 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-
   </div>
   <div class="ccwrap"><canvas id="chart"></canvas></div>
 </div>
- 
+
 <div class="twrap">
   <div class="thead">
     <div class="th">Ставка дня, ₽</div>
@@ -138,47 +138,47 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-
   </div>
   <div class="tbody" id="tbody"></div>
 </div>
- 
+
 <footer>
   <span>Спорт вокруг ИТ · Калькулятор прибыльности мероприятий</span>
   <span>Шаг ставки 2 000 ₽ · Минимум 50 000 ₽ · Зоны не включены</span>
 </footer>
 </div>
- 
+
 <script>
 const fmt = v => Math.round(v).toLocaleString('ru-RU');
 const fmtK = v => { const k=v/1000; return (k%1===0?k.toFixed(0):k.toFixed(1))+'к'; };
 const MIN=50000, STEP=2000;
- 
+
 function buildRates(max) {
   const r=[];
   for(let x=MIN;x<=max;x+=STEP) r.push(x);
   if(r[r.length-1]!==max) r.push(max);
   return r;
 }
- 
+
 let chart=null;
- 
+
 function render(){
   const nBase = Math.max(1,parseInt(document.getElementById('nBase').value)||12);
   const dpe   = Math.max(1,parseInt(document.getElementById('dpe').value)||6);
   const cpd   = Math.max(0,parseFloat(document.getElementById('cpd').value)||27347);
   const maxR  = Math.max(MIN+STEP,parseFloat(document.getElementById('maxRate').value)||96000);
- 
+
   const totalDays  = nBase * dpe;
   const pdBase     = maxR - cpd;
   const pyBase     = pdBase * totalDays;
- 
+
   document.getElementById('fpill').innerHTML =
     '<b>Целевая прибыль года</b> = ('+fmt(maxR)+' − '+fmt(cpd)+') × '+totalDays+' дн. = <b>'+fmt(pyBase)+' ₽</b>' +
     ' &nbsp;·&nbsp; <b>Нужно дней</b> = '+fmt(pyBase)+' / (ставка − '+fmt(cpd)+')' +
     ' &nbsp;·&nbsp; <b>Нужно меропр.</b> = дней / '+dpe;
- 
+
   document.getElementById('s1').textContent = fmt(pyBase)+' ₽';
   document.getElementById('s1s').textContent = nBase+' меропр. × '+dpe+' дн. × '+fmt(pdBase)+' ₽/день';
   document.getElementById('s2').textContent = fmt(pdBase)+' ₽';
   document.getElementById('s2s').textContent = fmt(maxR)+' − '+fmt(cpd)+' ₽ ЗП';
- 
+
   const rates = buildRates(maxR);
   const res = rates.map(rate=>{
     const pd = rate - cpd;
@@ -186,10 +186,10 @@ function render(){
     const en = dn!==null ? dn/dpe : null;
     return {rate,pd,dn,en};
   });
- 
+
   const atMax = res.find(r=>r.rate===maxR);
   const minOk = [...res].reverse().find(r=>r.en!==null&&Math.ceil(r.en)<=nBase);
- 
+
   if(atMax&&atMax.en!==null){
     document.getElementById('s3').textContent = Math.ceil(atMax.en)+' мероприятий';
     document.getElementById('s3s').textContent = '= '+Math.ceil(atMax.dn)+' дней';
@@ -197,7 +197,7 @@ function render(){
     document.getElementById('s3').textContent = 'убыток';
     document.getElementById('s3s').textContent = 'ставка ниже ЗП';
   }
- 
+
   if(minOk){
     document.getElementById('s4').textContent = fmt(minOk.rate)+' ₽';
     document.getElementById('s4s').textContent = 'нужно '+Math.ceil(minOk.en)+' меропр.';
@@ -205,14 +205,14 @@ function render(){
     document.getElementById('s4').textContent = '> '+fmt(maxR)+' ₽';
     document.getElementById('s4s').textContent = 'снизьте план или поднимите ставку';
   }
- 
+
   if(chart) chart.destroy();
   const pos = res.filter(r=>r.en!==null);
   const maxY = pos.length ? Math.min(Math.max(...pos.map(r=>r.en),nBase)*1.35,nBase*6) : nBase*3;
- 
+
   Chart.defaults.color='#8890a8';
   Chart.defaults.font.family="'Geologica',sans-serif";
- 
+
   chart = new Chart(document.getElementById('chart'),{
     type:'bar',
     data:{
@@ -265,7 +265,7 @@ function render(){
       }
     }]
   });
- 
+
   const tbody=document.getElementById('tbody');
   tbody.innerHTML='';
   [...res].reverse().forEach((r,i)=>{
@@ -295,7 +295,7 @@ function render(){
     tbody.appendChild(row);
   });
 }
- 
+
 ['nBase','dpe','cpd','maxRate'].forEach(id=>document.getElementById(id).addEventListener('input',render));
 render();
 </script>
