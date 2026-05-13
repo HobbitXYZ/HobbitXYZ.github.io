@@ -139,6 +139,38 @@ footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--border);font-
   <div class="tbody" id="tbody"></div>
 </div>
 
+
+<!-- Market Analysis -->
+<div style="margin-top:40px;">
+<div class="sec-label">Анализ рынка — потолок роста</div>
+
+<div class="icard" style="margin-bottom:16px;padding:16px 20px;">
+  <div class="ilabel">Всего мероприятий на рынке (ФГ)</div>
+  <div class="irow"><input type="number" id="mktTotal" value="64" min="1" max="500"><span class="iunit">шт.</span></div>
+  <div class="ihint">Меняйте — таблица пересчитается автоматически</div>
+</div>
+
+<div class="fpill" id="mkt-formula"></div>
+
+<div class="sgrid" style="grid-template-columns:repeat(3,1fr);">
+  <div class="scard hl"><div class="slabel">Текущая доля рынка</div><div class="sval accent" id="ms1">—</div><div class="ssub" id="ms1s"></div></div>
+  <div class="scard"><div class="slabel">Оптимальная зона ставок</div><div class="sval green" id="ms2">—</div><div class="ssub" id="ms2s"></div></div>
+  <div class="scard"><div class="slabel">Потолок при текущей ставке</div><div class="sval" id="ms3">—</div><div class="ssub" id="ms3s"></div></div>
+</div>
+
+<div class="twrap">
+  <div class="thead" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;">
+    <div class="th">Ставка, ₽</div>
+    <div class="th">Прибыль дня, ₽</div>
+    <div class="th">Нужно для базы</div>
+    <div class="th">Остаток рынка</div>
+    <div class="th">Потолок (весь рынок)</div>
+    <div class="th">Потолок / сейчас</div>
+  </div>
+  <div class="tbody" id="mkt-tbody"></div>
+</div>
+</div>
+
 <footer>
   <span>Спорт вокруг ИТ · Калькулятор прибыльности мероприятий</span>
   <span>Шаг ставки 2 000 ₽ · Минимум 50 000 ₽ · Зоны не включены</span>
@@ -296,8 +328,98 @@ function render(){
   });
 }
 
-['nBase','dpe','cpd','maxRate'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+['nBase','dpe','cpd','maxRate'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{render();renderMarket();}));
 render();
+
+
+// ── Market analysis ──────────────────────────────────────────
+function renderMarket() {
+  const nBase  = Math.max(1, parseInt(document.getElementById('nBase').value) || 12);
+  const cpd    = Math.max(0, parseFloat(document.getElementById('cpd').value) || 27347);
+  const maxR   = Math.max(52000, parseFloat(document.getElementById('maxRate').value) || 96000);
+  const market = Math.max(1, parseInt(document.getElementById('mktTotal').value) || 64);
+  const dpe    = Math.max(1, parseInt(document.getElementById('dpe').value) || 6);
+
+  const pdBase    = maxR - cpd;
+  const pyBase    = pdBase * nBase * dpe;
+  const curShare  = nBase / market * 100;
+
+  document.getElementById('ms1').textContent = curShare.toFixed(1) + '%';
+  document.getElementById('ms1s').textContent = nBase + ' из ' + market + ' мероприятий';
+
+  const ceilProfit = market * dpe * pdBase;
+  const ceilX = (ceilProfit / pyBase).toFixed(1);
+  document.getElementById('ms3').textContent = fmt(ceilProfit) + ' ₽';
+  document.getElementById('ms3s').textContent = ceilX + 'x от текущей прибыли';
+
+  // Найти оптимальную зону: где остаток рынка > 50% и потолок/текущий > 4x
+  const optRates = [];
+  for(let r=50000; r<=maxR; r+=2000) {
+    const pd = r - cpd;
+    if(pd <= 0) continue;
+    const needed = pyBase / (pd * dpe);
+    const leftover = market - needed;
+    const ceil = market * dpe * pd;
+    const ceilRatio = ceil / pyBase;
+    if(leftover/market >= 0.5 && ceilRatio >= 3.5 && needed <= nBase * 1.5) {
+      optRates.push(r);
+    }
+  }
+  if(optRates.length) {
+    const lo = optRates[0], hi = optRates[optRates.length-1];
+    document.getElementById('ms2').textContent = fmt(lo) + ' — ' + fmt(hi) + ' ₽';
+    document.getElementById('ms2s').textContent = 'скидка −' + ((maxR-hi)/maxR*100).toFixed(0) + '–' + ((maxR-lo)/maxR*100).toFixed(0) + '% от текущей';
+  } else {
+    document.getElementById('ms2').textContent = 'текущая ставка';
+    document.getElementById('ms2s').textContent = 'снижение нецелесообразно';
+  }
+
+  document.getElementById('mkt-formula').innerHTML =
+    '<b>Потолок прибыли</b> = ' + market + ' меропр. × ' + dpe + ' дн. × прибыль дня' +
+    ' &nbsp;·&nbsp; <b>Остаток рынка</b> = ' + market + ' − нужно для базы' +
+    ' &nbsp;·&nbsp; Чем ниже ставка — тем меньше остаток и ниже потолок';
+
+  // Table
+  const tbody = document.getElementById('mkt-tbody');
+  tbody.innerHTML = '';
+  const rows = [];
+  for(let r=50000; r<=maxR; r+=2000) rows.push(r);
+
+  [...rows].reverse().forEach((r, i) => {
+    const pd = r - cpd;
+    if(pd <= 0) return;
+    const needed   = pyBase / (pd * dpe);
+    const leftover = Math.max(0, market - needed);
+    const ceil     = market * dpe * pd;
+    const ceilR    = ceil / pyBase;
+    const isCur    = r === maxR;
+    const isOpt    = optRates.includes(r);
+
+    const leftClr = leftover < market*0.2 ? 'var(--red)' : leftover < market*0.4 ? 'var(--orange, #ffaa44)' : 'var(--green)';
+    const ceilClr = ceilR >= 4 ? 'var(--green)' : ceilR >= 2.5 ? '' : 'var(--red)';
+    const bg = isCur ? 'background:rgba(200,242,71,0.07);border-left:2px solid var(--accent);' :
+               isOpt ? 'background:rgba(61,232,138,0.05);' : '';
+    const label = isCur ? ' <span style=\"font-size:10px;color:var(--accent)\">← сейчас</span>' :
+                  isOpt ? ' <span style=\"font-size:10px;color:var(--green)\">← опт.</span>' : '';
+
+    const row = document.createElement('div');
+    row.className = 'trow';
+    row.style.cssText = bg + 'grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;';
+    row.style.animationDelay = (i*6)+'ms';
+    row.innerHTML =
+      '<div class="td tdrate" style="color:'+(isCur?'var(--accent)':isOpt?'var(--green)':'var(--text)')+'">'+fmt(r)+' ₽'+label+'</div>'+
+      '<div class="td" style="color:var(--muted);text-align:right">'+fmt(pd)+' ₽</div>'+
+      '<div class="td" style="text-align:right">'+needed.toFixed(1)+'</div>'+
+      '<div class="td" style="text-align:right;color:'+leftClr+'">'+leftover.toFixed(1)+'</div>'+
+      '<div class="td" style="text-align:right">'+fmt(ceil)+' ₽</div>'+
+      '<div class="td" style="text-align:right;font-weight:700;color:'+ceilClr+'">'+ceilR.toFixed(1)+'x</div>';
+    tbody.appendChild(row);
+  });
+}
+
+document.getElementById('mktTotal').addEventListener('input', renderMarket);
+renderMarket();
+
 </script>
 </body>
 </html>
